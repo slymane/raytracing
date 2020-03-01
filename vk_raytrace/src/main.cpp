@@ -55,6 +55,7 @@
 static bool             g_ResizeWanted = false;
 static int              g_winWidth = 1280, g_winHeight = 720;
 static VkDescriptorPool g_imguiDescPool;
+static bool             g_useRaytracing = true;
 
 //////////////////////////////////////////////////////////////////////////
 #define UNUSED(x) (void)(x)
@@ -238,6 +239,7 @@ void renderUI(HelloVulkan& helloVk)
   ImGui::RadioButton("Point", &helloVk.m_pushConstant.lightType, 0);
   ImGui::SameLine();
   ImGui::RadioButton("Infinite", &helloVk.m_pushConstant.lightType, 1);
+  ImGui::Checkbox("Raytrace", &g_useRaytracing);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -314,8 +316,17 @@ int main(int argc, char** argv)
   HelloVulkan helloVk;
   helloVk.init(appBase.getDevice(), appBase.getPhysicalDevice(), appBase.getQueueFamily(),
                appBase.getSize());
-  helloVk.loadModel("../media/scenes/plane.obj");
-  helloVk.loadModel("../media/scenes/cube.obj");
+
+  uint32_t cubeObjIdx = helloVk.loadObject("../media/scenes/cube_multi.obj");
+  std::default_random_engine gen;
+  std::normal_distribution<float> cubeDist(0.0f, 10.0f);
+
+  for (int i = 0; i < 1337; i++)
+  {
+      glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen), cubeDist(gen), cubeDist(gen)));
+      helloVk.addInstance(cubeObjIdx, transform);
+      helloVk.addInstance(cubeObjIdx, transform * transform);
+  }
 
   helloVk.createOffscreenRender();
   helloVk.createDescriptorSetLayout();
@@ -333,8 +344,6 @@ int main(int argc, char** argv)
   helloVk.updatePostDescriptorSet();
   helloVk.createRtPipeline();
   helloVk.createRtShaderBindingTable();
-
-  bool useRaytracer = true;
 
   glm::vec4 clearColor = glm::vec4(1, 1, 1, 1.00f);
 
@@ -393,7 +402,7 @@ int main(int argc, char** argv)
     offscreenRenderPassBeginInfo.setRenderArea({{}, appBase.getSize()});
 
     // Rendering Scene
-    if(useRaytracer)
+    if(g_useRaytracing)
     {
       helloVk.raytrace(cmdBuff, clearColor);
     }

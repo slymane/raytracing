@@ -210,54 +210,65 @@ void HelloVulkan::createGraphicsPipeline(const vk::RenderPass& renderPass)
   m_debug.setObjectName(m_graphicsPipeline, "Graphics");
 }
 
+uint32_t HelloVulkan::loadObject(const std::string& filename)
+{
+    using vkBU = vk::BufferUsageFlagBits;
+
+    ObjLoader<Vertex> loader;
+    loader.loadModel(filename);
+    
+    // Converting from Srgb to linear
+    for (auto& m : loader.m_materials)
+    {
+        m.ambient = glm::pow(m.ambient, glm::vec3(2.2f));
+        m.diffuse = glm::pow(m.diffuse, glm::vec3(2.2f));
+        m.specular = glm::pow(m.specular, glm::vec3(2.2f));
+    }
+
+    ObjModel model;
+    model.nbIndices = static_cast<uint32_t>(loader.m_indices.size());
+    model.nbVertices = static_cast<uint32_t>(loader.m_vertices.size());
+
+    // Create the buffers on Device and copy vertices, indices and materials
+    nvvkpp::SingleCommandBuffer cmdBufGet(m_device, m_queueIndex);
+    vk::CommandBuffer           cmdBuf = cmdBufGet.createCommandBuffer();
+    model.vertexBuffer =
+        m_alloc.createBuffer(cmdBuf, loader.m_vertices, vkBU::eVertexBuffer | vkBU::eStorageBuffer);
+    model.indexBuffer =
+        m_alloc.createBuffer(cmdBuf, loader.m_indices, vkBU::eIndexBuffer | vkBU::eStorageBuffer);
+    model.matColorBuffer = m_alloc.createBuffer(cmdBuf, loader.m_materials, vkBU::eStorageBuffer);
+    // Creates all textures found
+    createTextureImages(cmdBuf, loader.m_textures);
+    cmdBufGet.flushCommandBuffer(cmdBuf);
+    m_alloc.flushStaging();
+
+    std::string objNb = std::to_string(m_objModel.size());
+    m_debug.setObjectName(model.vertexBuffer.buffer, (std::string("vertex_" + objNb).c_str()));
+    m_debug.setObjectName(model.indexBuffer.buffer, (std::string("index_" + objNb).c_str()));
+    m_debug.setObjectName(model.matColorBuffer.buffer, (std::string("mat_" + objNb).c_str()));
+
+    m_objModel.emplace_back(model);
+
+    return static_cast<uint32_t>(m_objModel.size() - 1);
+}
+
+void HelloVulkan::addInstance(uint32_t objIndex, glm::mat4 transform)
+{
+    ObjInstance instance;
+    instance.objIndex = objIndex;
+    instance.transform = transform;
+    instance.transformIT = glm::inverseTranspose(transform);
+    instance.txtOffset = objIndex; // Pipeline is set up with EXACTLY one texture per obj
+    m_objInstance.emplace_back(instance);
+}
+
 //--------------------------------------------------------------------------------------------------
 // Loading the OBJ file and setting up all buffers
 //
 void HelloVulkan::loadModel(const std::string& filename, glm::mat4 transform)
 {
-  using vkBU = vk::BufferUsageFlagBits;
-
-  ObjLoader<Vertex> loader;
-  loader.loadModel(filename);
-
-  // Converting from Srgb to linear
-  for(auto& m : loader.m_materials)
-  {
-    m.ambient  = glm::pow(m.ambient, glm::vec3(2.2f));
-    m.diffuse  = glm::pow(m.diffuse, glm::vec3(2.2f));
-    m.specular = glm::pow(m.specular, glm::vec3(2.2f));
-  }
-
-  ObjInstance instance;
-  instance.objIndex    = static_cast<uint32_t>(m_objModel.size());
-  instance.transform   = transform;
-  instance.transformIT = glm::inverseTranspose(transform);
-  instance.txtOffset   = static_cast<uint32_t>(m_textures.size());
-
-  ObjModel model;
-  model.nbIndices  = static_cast<uint32_t>(loader.m_indices.size());
-  model.nbVertices = static_cast<uint32_t>(loader.m_vertices.size());
-
-  // Create the buffers on Device and copy vertices, indices and materials
-  nvvkpp::SingleCommandBuffer cmdBufGet(m_device, m_queueIndex);
-  vk::CommandBuffer           cmdBuf = cmdBufGet.createCommandBuffer();
-  model.vertexBuffer =
-      m_alloc.createBuffer(cmdBuf, loader.m_vertices, vkBU::eVertexBuffer | vkBU::eStorageBuffer);
-  model.indexBuffer =
-      m_alloc.createBuffer(cmdBuf, loader.m_indices, vkBU::eIndexBuffer | vkBU::eStorageBuffer);
-  model.matColorBuffer = m_alloc.createBuffer(cmdBuf, loader.m_materials, vkBU::eStorageBuffer);
-  // Creates all textures found
-  createTextureImages(cmdBuf, loader.m_textures);
-  cmdBufGet.flushCommandBuffer(cmdBuf);
-  m_alloc.flushStaging();
-
-  std::string objNb = std::to_string(instance.objIndex);
-  m_debug.setObjectName(model.vertexBuffer.buffer, (std::string("vertex_" + objNb).c_str()));
-  m_debug.setObjectName(model.indexBuffer.buffer, (std::string("index_" + objNb).c_str()));
-  m_debug.setObjectName(model.matColorBuffer.buffer, (std::string("mat_" + objNb).c_str()));
-
-  m_objModel.emplace_back(model);
-  m_objInstance.emplace_back(instance);
+    uint32_t objIndex = loadObject(filename);
+    addInstance(objIndex, transform);
 }
 
 

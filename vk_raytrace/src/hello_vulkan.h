@@ -52,7 +52,11 @@ public:
             const vk::Extent2D&       size);
   void createDescriptorSetLayout();
   void createGraphicsPipeline(const vk::RenderPass& renderPass);
+
   void loadModel(const std::string& filename, glm::mat4 transform = glm::mat4(1));
+  uint32_t loadObject(const std::string& filename);
+  void addInstance(uint32_t objIndex, glm::mat4 transform = glm::mat4(1));
+
   void updateDescriptorSet();
   void createUniformBuffer();
   void createSceneDescriptionBuffer();
