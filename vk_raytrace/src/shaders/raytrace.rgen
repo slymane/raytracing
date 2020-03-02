@@ -6,6 +6,7 @@
 
 layout(binding = 0, set = 0) uniform accelerationStructureNV topLevelAS;
 layout(binding = 1, set = 0, rgba32f) uniform image2D image;
+
 layout(binding = 0, set = 1) uniform CameraProperties
 {
   mat4 view;
@@ -14,10 +15,11 @@ layout(binding = 0, set = 1) uniform CameraProperties
   mat4 projInverse;
 }
 cam;
+
 layout(location = 0) rayPayloadNV hitPayload prd;
 
 // The job of this shader is to generate a ray, and then call traceNV, and write the pixel into the buffer
-void main() 
+void main()
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + vec2(0.5);
     const vec2 inUV = pixelCenter / vec2(gl_LaunchSizeNV.xy);
@@ -29,6 +31,10 @@ void main()
     uint  rayFlags = gl_RayFlagsOpaqueNV;
     float tMin     = 0.001;
     float tMax     = 10000.0;
+
+    prd.recursionDepth = 8;
+    prd.hitValue = vec3(0);
+    prd.attenuation = vec3(1.f);
 
     traceNV(topLevelAS,     // acceleration structure
         rayFlags,       // rayFlags

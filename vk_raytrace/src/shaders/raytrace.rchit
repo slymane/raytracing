@@ -6,8 +6,10 @@
 #include "raycommon.glsl"
 #include "wavefront.glsl"
 
+
 layout(location = 0) rayPayloadInNV hitPayload prd;
 
+layout(binding = 0, set = 0) uniform accelerationStructureNV topLevelAS;
 layout(binding = 1, set = 1, scalar) buffer MatColorBufferObject { WaveFrontMaterial m[]; } materials[];
 layout(binding = 2, set = 1, scalar) buffer ScnDesc { sceneDesc i[]; } scnDesc;
 layout(binding = 3, set = 1) uniform sampler2D textureSamplers[];
@@ -84,5 +86,33 @@ void main()
 
     vec3 specular = computeSpecular(mat, gl_WorldRayDirectionNV, L, normal);
 
-    prd.hitValue = vec3(lightIntensity * (diffuse + specular));
+    vec3 hitValue = vec3(0);
+    vec3 attenuation = prd.attenuation;
+
+    if (mat.illum == 3 && prd.recursionDepth > 0)
+    {
+        vec3 origin = worldPos;
+        vec3 direction = reflect(gl_WorldRayDirectionNV, normal);
+        prd.attenuation = prd.attenuation * mat.specular;
+
+        prd.recursionDepth--;
+
+        traceNV(
+            topLevelAS,           // acceleration structure
+            gl_RayFlagsOpaqueNV,  // rayFlags
+            0xFF,                 // cullMask
+            0,                    // sbtRecordOffset
+            0,                    // sbtRecordStride
+            0,                    // missIndex
+            origin,               // ray origin
+            0.001,                // ray min range
+            direction,            // ray direction
+            10000.0,              // ray max range
+            0                     // payload (location = 0)
+        );
+
+        prd.recursionDepth++;
+    }
+
+    prd.hitValue += vec3(lightIntensity * attenuation * (diffuse + specular));
 }

@@ -684,7 +684,7 @@ void HelloVulkan::createRtDescriptorSet()
   using vkDSLB = vk::DescriptorSetLayoutBinding;
 
   m_rtDescSetLayoutBind.emplace_back(
-      vkDSLB(0, vkDT::eAccelerationStructureNV, 1, vkSS::eRaygenNV));  // TLAS
+      vkDSLB(0, vkDT::eAccelerationStructureNV, 1, vkSS::eRaygenNV | vkSS::eClosestHitNV));  // TLAS
   m_rtDescSetLayoutBind.emplace_back(
       vkDSLB(1, vkDT::eStorageImage, 1, vkSS::eRaygenNV));  // Output image
 
