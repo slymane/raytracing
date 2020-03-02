@@ -28,9 +28,12 @@ Ray1.prototype.render = function (canvas, gl, w, h) {
     //gl.uniformMatrix4fv(gl.getUniformLocation(this.shaderProgram, "ModelViewProjection"), 
     //    false, modelViewProjection.transpose().m);
 
+    var d = new Date();
+    var s = d.getSeconds() + (d.getMilliseconds() / 1000)
+    var t = (Math.PI / 30) * ((10 * s) % 60);
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "WindowHeight"), h)
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "WindowWidth"), w)
-
+    gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "time"), t);
     // #### END
 
     // Bind index, position, and normal buffers

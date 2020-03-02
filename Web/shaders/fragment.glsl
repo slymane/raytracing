@@ -6,6 +6,7 @@ out vec4 fragmentColor;
 
 uniform float WindowHeight;
 uniform float WindowWidth;
+uniform float time;
 
 struct Ray {
     vec3 origin;
@@ -40,7 +41,14 @@ struct Scene {
     vec3 background;
     Sphere object;
     PointLight light;
+    float ambient;
 };
+
+vec3 shade_light(Ray ray, HitRecord hitrec, Scene scene) {
+    vec3 l = normalize(scene.light.position - hitrec.intersection);
+    vec3 k_d = hitrec.object.color;
+    return scene.ambient + k_d * scene.light.intensity * max(0.0, dot(hitrec.normal, l));
+}
 
 Ray pixel_to_ray(CanonicalCamera camera, float i, float j) {
     float vp_height = camera.canv_height / camera.canv_width;
@@ -93,16 +101,16 @@ vec3 traceray(Scene scene, Ray ray, float tmin, float tmax) {
     HitRecord hr = closest_intersect(ray, scene.object, tmin, tmax);
 
     if (hr.valid) {
-        return hr.object.color;  
+        return shade_light(ray, hr, scene);
     }
     return scene.background;
 }
 
 Scene get_scene1() {
     vec3 bg = vec3(0.95, 0.95, 0.95);
-    Sphere object = Sphere(vec3(-0.5, -0.5, -6), 1.0, vec3(0.73, 0, 0.17));
-    PointLight light = PointLight(0.8, vec3(0, 0, 0));
-    return Scene(bg, object, light);
+    Sphere object = Sphere(vec3(-0.5, -0.5, -6), 1.0, vec3(pow(sin(time), 2.0), 0.5, pow(cos(time), 2.0)));
+    PointLight light = PointLight(1.0, vec3(-2, 3, 0));
+    return Scene(bg, object, light, 0.2);
 }
 
 void main() {
