@@ -51,6 +51,10 @@ function setupTask(canvasId, taskFunction, useGl) {
         }
     });
 
+    canvas.addEventListener("mousemove", function(event) {
+        task.setLight(canvas, event);
+    });
+
     var renderLoop = function() {
         task.render(canvas, gl, renderWidth, renderHeight);
         window.requestAnimationFrame(renderLoop);
