@@ -2,6 +2,7 @@
  * Copyright 1986, 2017 NVIDIA Corporation. All rights reserved.
  ******************************************************************************/
 #include "manipulator.h"
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -95,9 +96,26 @@ float Manipulator::getRoll() const
 //--------------------------------------------------------------------------------------------------
 //
 //
-const glm::mat4& Manipulator::getMatrix() const
+const glm::mat4& Manipulator::getMatrix()
 {
-  return m_matrix;
+    // Hacky solution for wasd movement - this function is called every frame,
+    // so accumulate the position here
+
+    const float SPEED = 0.1f;
+
+    glm::vec3 z(m_pos - m_int);
+    z = glm::normalize(z);
+    glm::vec3 x = glm::cross(m_up, z);
+    x = glm::normalize(x);
+    z *= -m_moveState.y;
+    x *= m_moveState.x;
+
+    m_pos += x + z;
+    m_int += x + z;
+
+    update();
+
+    return m_matrix;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -377,6 +395,11 @@ void Manipulator::pan(float dx, float dy)
 
   m_pos += x + y;
   m_int += x + y;
+}
+
+void Manipulator::wasd(glm::vec2 moveState)
+{
+    m_moveState = moveState;
 }
 
 //--------------------------------------------------------------------------------------------------

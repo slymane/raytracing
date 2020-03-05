@@ -78,7 +78,7 @@ public:
   float getRoll() const;
 
   /// Retrieving the transformation matrix of the camera
-  const glm::mat4& getMatrix() const;
+  const glm::mat4& getMatrix();
 
   /// Changing the default speed movement
   void setSpeed(float speed);
@@ -101,6 +101,9 @@ public:
 
   /// Retrieve the screen height
   int getHeight() const;
+
+  // Camera WASD motion
+  void wasd(glm::vec2 moveState);
 
 protected:
   Manipulator();
@@ -135,6 +138,7 @@ protected:
   // Other
   float     m_speed = 30;
   glm::vec2 m_mouse = glm::vec2(0, 0);
+  glm::vec2 m_moveState = glm::vec2(0, 0);
 
   bool  m_button = false;  // Button pressed
   bool  m_moving = false;  // Mouse is moving

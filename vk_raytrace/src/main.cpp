@@ -90,20 +90,39 @@ static void onResizeCallback(GLFWwindow* window, int w, int h)
 
 static void onKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-  if(ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse)
+  if(ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
   {
     return;
   }
 
-  if(action == GLFW_RELEASE)  // Don't deal with key up
+  static glm::vec2 dVec2 = glm::vec2();
+
+  if (action == GLFW_PRESS)
   {
-    return;
+      switch (key)
+      {
+      case GLFW_KEY_ESCAPE:
+      case GLFW_KEY_Q:
+          glfwSetWindowShouldClose(window, 1);
+          break;
+      case GLFW_KEY_W: dVec2.y++; break;
+      case GLFW_KEY_S: dVec2.y--; break;
+      case GLFW_KEY_D: dVec2.x++; break;
+      case GLFW_KEY_A: dVec2.x--; break;
+      }
+  }
+  else if (action == GLFW_RELEASE)
+  {
+      switch (key)
+      {
+      case GLFW_KEY_W: dVec2.y--; break;
+      case GLFW_KEY_S: dVec2.y++; break;
+      case GLFW_KEY_D: dVec2.x--; break;
+      case GLFW_KEY_A: dVec2.x++; break;
+      }
   }
 
-  if(key == GLFW_KEY_ESCAPE || key == 'Q')
-  {
-    glfwSetWindowShouldClose(window, 1);
-  }
+  CameraManip.wasd(dVec2);
 }
 
 static void onMouseMoveCallback(GLFWwindow* window, double mouseX, double mouseY)
