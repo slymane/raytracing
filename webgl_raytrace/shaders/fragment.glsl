@@ -7,6 +7,8 @@ out vec4 fragmentColor;
 uniform float WindowHeight;
 uniform float WindowWidth;
 uniform float time;
+uniform float MouseX;
+uniform float MouseY;
 
 struct Ray {
     vec3 origin;
@@ -108,9 +110,9 @@ vec3 traceray(Scene scene, Ray ray, float tmin, float tmax) {
 
 Scene get_scene1() {
     vec3 bg = vec3(0.95, 0.95, 0.95);
-    Sphere object = Sphere(vec3(-0.5, -0.5, -6), 1.0, vec3(pow(sin(time), 2.0), 0.5, pow(cos(time), 2.0)));
-    PointLight light = PointLight(1.0, vec3(-2, 3, 0));
-    return Scene(bg, object, light, 0.2);
+    Sphere object = Sphere(vec3(0, 0, -7), 1.0, vec3(pow(sin(time), 2.0), 0.5, pow(cos(time), 2.0)));
+    PointLight light = PointLight(1.0, vec3(MouseX, MouseY, 0));
+    return Scene(bg, object, light, 0.0);
 }
 
 void main() {

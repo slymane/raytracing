@@ -9,6 +9,8 @@ var Ray1 = function (canvas, gl) {
     this.indexIbo = createIndexBuffer(gl, ViewIndices);
     this.shaderProgram = createShaderProgram(gl, vertexSourceFile, fragmentSourceFile);
 
+    this.x = 0;
+    this.y = 0;
     gl.enable(gl.DEPTH_TEST);
 }
 
@@ -34,6 +36,8 @@ Ray1.prototype.render = function (canvas, gl, w, h) {
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "WindowHeight"), h)
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "WindowWidth"), w)
     gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "time"), t);
+    gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "MouseX"), this.x);
+    gl.uniform1f(gl.getUniformLocation(this.shaderProgram, "MouseY"), this.y);
     // #### END
 
     // Bind index, position, and normal buffers
@@ -51,4 +55,10 @@ Ray1.prototype.render = function (canvas, gl, w, h) {
 
 Ray1.prototype.dragCamera = function (dy) {
     this.cameraAngle = Math.min(Math.max(this.cameraAngle - dy * 0.5, -90), 90);
+}
+
+Ray1.prototype.setLight = function (canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    this.x = 100*(((evt.clientX - rect.left) / rect.width) - 0.5);
+    this.y = 100*(((evt.clientY - rect.top) / rect.height) - 0.5);
 }

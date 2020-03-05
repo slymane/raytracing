@@ -15,7 +15,7 @@
 
 #### Setting It Up
 
-Because we didn't want to embed our shader files directly in the javascript, it is necessary to run a simple web server to get this project working. Navigate to the Web directory and run `python3 -m http.server`, then point your browser to `localhost:8000`. You should see a lambertian-shaded sphere, smoothly alternating between two colors.
+Because we didn't want to embed our shader files directly in the javascript, it is necessary to run a simple web server to get this project working. Navigate to the Web directory and run `python3 -m http.server`, then point your browser to `localhost:8000`. You should see a lambertian-shaded sphere, smoothly alternating between two colors. As you move the mouse around the canvas, the direction of the point light should change as well.
 
 ![The WebGL raytracer](results/webgl_lambertian.png)
 
