@@ -683,6 +683,8 @@ void HelloVulkan::createRtDescriptorSet()
   using vkSS   = vk::ShaderStageFlagBits;
   using vkDSLB = vk::DescriptorSetLayoutBinding;
 
+  // Top-level acceleration structure, usable by both the ray generation and the closest hit (to
+  // shoot shadow rays)
   m_rtDescSetLayoutBind.emplace_back(
       vkDSLB(0, vkDT::eAccelerationStructureNV, 1, vkSS::eRaygenNV | vkSS::eClosestHitNV));  // TLAS
   m_rtDescSetLayoutBind.emplace_back(
@@ -730,6 +732,12 @@ void HelloVulkan::createRtPipeline()
       nvvkpp::util::createShaderModule(m_device,  //
                                        nvvkpp::util::readFile("shaders/raytrace.rmiss.spv"));
 
+  // The second miss shader is invoked when a show ray misses the gemority. It
+  // simply indicates that no occlusion has been found
+  vk::ShaderModule shadowmissSM =
+      nvvkpp::util::createShaderModule(m_device, //
+                                       nvvkpp::util::readFile("shaders/raytraceShadow.rmiss.spv"));
+
   std::vector<vk::PipelineShaderStageCreateInfo> stages;
 
   // Raygen
@@ -745,6 +753,11 @@ void HelloVulkan::createRtPipeline()
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV,
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV};
   stages.push_back({{}, vk::ShaderStageFlagBits::eMissNV, missSM, "main"});
+  mg.setGeneralShader(static_cast<uint32_t>(stages.size() - 1));
+  m_rtShaderGroups.push_back(mg);
+
+  // Shadow miss
+  stages.push_back({ {}, vk::ShaderStageFlagBits::eMissNV, shadowmissSM, "main" });
   mg.setGeneralShader(static_cast<uint32_t>(stages.size() - 1));
   m_rtShaderGroups.push_back(mg);
 
@@ -786,6 +799,7 @@ void HelloVulkan::createRtPipeline()
 
   m_device.destroy(raygenSM);
   m_device.destroy(missSM);
+  m_device.destroy(shadowmissSM);
   m_device.destroy(chitSM);
 }
 
@@ -835,7 +849,7 @@ void HelloVulkan::raytrace(const vk::CommandBuffer& cmdBuf, const glm::vec4& cle
   vk::DeviceSize rayGenOffset   = 0u * progSize;  // Start at the beginning of m_sbtBuffer
   vk::DeviceSize missOffset     = 1u * progSize;  // Jump over raygen
   vk::DeviceSize missStride     = progSize;
-  vk::DeviceSize hitGroupOffset = 2u * progSize;  // Jump over the previous shaders
+  vk::DeviceSize hitGroupOffset = 3u * progSize;  // Jump over the previous shaders
   vk::DeviceSize hitGroupStride = progSize;
   // m_sbtBuffer holds all the shader handles: raygen, n-miss, hit...
   cmdBuf.traceRaysNV(m_rtSBTBuffer.buffer, rayGenOffset,                    //

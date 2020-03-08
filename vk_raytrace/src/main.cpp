@@ -292,7 +292,7 @@ int main(int argc, char** argv)
 
   // Setup camera
   CameraManip.setWindowSize(g_winWidth, g_winHeight);
-  CameraManip.setLookat(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+  CameraManip.setLookat(glm::vec3(4.0f, 4.0f, 4.0f), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
 
   // Setup Vulkan
   if(!glfwVulkanSupported())
@@ -336,12 +336,14 @@ int main(int argc, char** argv)
   helloVk.init(appBase.getDevice(), appBase.getPhysicalDevice(), appBase.getQueueFamily(),
                appBase.getSize());
 
+  // Model loading happens here
   helloVk.loadModel("../media/scenes/plane.obj");
+  helloVk.loadModel("../media/scenes/Medieval_building.obj");
   uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
 
-  for (int i = 0; i < 80; i++)
+  for (int i = 0; i < 20; i++)
   {
       glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen), 0.8, cubeDist(gen)));
       helloVk.addInstance(icosphereIdx, transform);

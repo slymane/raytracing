@@ -36,7 +36,7 @@ void main()
     prd.hitValue = vec3(0);
     prd.attenuation = vec3(1.f);
 
-    traceNV(topLevelAS,     // acceleration structure
+    traceNV(topLevelAS, // acceleration structure
         rayFlags,       // rayFlags
         0xFF,           // cullMask
         0,              // sbtRecordOffset
