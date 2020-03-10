@@ -5,10 +5,10 @@
 #extension GL_GOOGLE_include_directive : enable
 #include "raycommon.glsl"
 #include "wavefront.glsl"
+#include "random.glsl"
 
 
 layout(location = 0) rayPayloadInNV hitPayload prd;
-layout(location = 1) rayPayloadNV bool isShadowed;
 
 layout(binding = 0, set = 0) uniform accelerationStructureNV topLevelAS;
 layout(binding = 1, set = 1, scalar) buffer MatColorBufferObject { WaveFrontMaterial m[]; } materials[];

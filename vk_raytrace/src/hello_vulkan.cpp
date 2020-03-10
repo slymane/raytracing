@@ -459,6 +459,7 @@ void HelloVulkan::rasterize(const vk::CommandBuffer& cmdBuf)
 void HelloVulkan::resize(const vk::Extent2D& size)
 {
   m_size = size;
+  resetFrame();
   createOffscreenRender();
   updatePostDescriptorSet();
   updateRtDescriptorSet();
@@ -728,15 +729,6 @@ void HelloVulkan::createRtPipeline()
   vk::ShaderModule raygenSM =
       nvvkpp::util::createShaderModule(m_device,  //
                                        nvvkpp::util::readFile("shaders/raytrace.rgen.spv"));
-  vk::ShaderModule missSM =
-      nvvkpp::util::createShaderModule(m_device,  //
-                                       nvvkpp::util::readFile("shaders/raytrace.rmiss.spv"));
-
-  // The second miss shader is invoked when a show ray misses the gemority. It
-  // simply indicates that no occlusion has been found
-  vk::ShaderModule shadowmissSM =
-      nvvkpp::util::createShaderModule(m_device, //
-                                       nvvkpp::util::readFile("shaders/raytraceShadow.rmiss.spv"));
 
   std::vector<vk::PipelineShaderStageCreateInfo> stages;
 
@@ -748,27 +740,42 @@ void HelloVulkan::createRtPipeline()
   rg.setGeneralShader(static_cast<uint32_t>(stages.size() - 1));
   m_rtShaderGroups.push_back(rg);
 
-  // Miss
+  // Miss group
   vk::RayTracingShaderGroupCreateInfoNV mg{vk::RayTracingShaderGroupTypeNV::eGeneral,
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV,
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV};
+  // Default miss shader
+  vk::ShaderModule missSM =
+      nvvkpp::util::createShaderModule(m_device, nvvkpp::util::readFile("shaders/raytrace.rmiss.spv"));
   stages.push_back({{}, vk::ShaderStageFlagBits::eMissNV, missSM, "main"});
   mg.setGeneralShader(static_cast<uint32_t>(stages.size() - 1));
   m_rtShaderGroups.push_back(mg);
 
-  // Shadow miss
+  // The second miss shader is invoked when a show ray misses the geometry. It
+  // simply indicates that no occlusion has been found
+  vk::ShaderModule shadowmissSM =
+      nvvkpp::util::createShaderModule(m_device, //
+          nvvkpp::util::readFile("shaders/raytraceShadow.rmiss.spv"));
   stages.push_back({ {}, vk::ShaderStageFlagBits::eMissNV, shadowmissSM, "main" });
   mg.setGeneralShader(static_cast<uint32_t>(stages.size() - 1));
   m_rtShaderGroups.push_back(mg);
 
   // Hit Group - Closest Hit + AnyHit
-  vk::ShaderModule chitSM =
-      nvvkpp::util::createShaderModule(m_device,  //
-                                       nvvkpp::util::readFile("shaders/raytrace.rchit.spv"));
   vk::RayTracingShaderGroupCreateInfoNV hg{vk::RayTracingShaderGroupTypeNV::eTrianglesHitGroup,
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV,
                                            VK_SHADER_UNUSED_NV, VK_SHADER_UNUSED_NV};
+
+  // Closest hit
+  vk::ShaderModule chitSM =
+      nvvkpp::util::createShaderModule(m_device, nvvkpp::util::readFile("shaders/raytrace.rchit.spv"));
   stages.push_back({{}, vk::ShaderStageFlagBits::eClosestHitNV, chitSM, "main"});
+  hg.setClosestHitShader(static_cast<uint32_t>(stages.size() - 1));
+  m_rtShaderGroups.push_back(hg);
+
+  // Path tracing closest hit
+  vk::ShaderModule pathChitSM =
+      nvvkpp::util::createShaderModule(m_device, nvvkpp::util::readFile("shaders/pathtrace.rchit.spv"));
+  stages.push_back({ {}, vk::ShaderStageFlagBits::eClosestHitNV, pathChitSM, "main" });
   hg.setClosestHitShader(static_cast<uint32_t>(stages.size() - 1));
   m_rtShaderGroups.push_back(hg);
 

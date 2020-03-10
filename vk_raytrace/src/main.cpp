@@ -260,7 +260,8 @@ void renderUI(HelloVulkan& helloVk)
   needRedraw |= ImGui::RadioButton("Point", &helloVk.m_pushConstant.lightType, 0);
   ImGui::SameLine();
   needRedraw |= ImGui::RadioButton("Infinite", &helloVk.m_pushConstant.lightType, 1);
-  needRedraw |= ImGui::Checkbox("Raytrace", &g_useRaytracing);
+  needRedraw |= ImGui::Checkbox("Raytrace", &g_useRaytracing); ImGui::SameLine();
+  needRedraw |= ImGui::Checkbox("Pathtrace", &helloVk.m_rtPushConstants.usePathTracing);
   if (needRedraw)
       helloVk.resetFrame();
 }
@@ -286,7 +287,7 @@ int main(int argc, char** argv)
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   GLFWwindow* window = glfwCreateWindow(g_winWidth, g_winHeight,
-                                        "NVIDIA Vulkan Raytracing Tutorial", nullptr, nullptr);
+                                        "Vulkan Raytracing - Eric Slyman, Jagi Natarajan", nullptr, nullptr);
 
   glfwSetScrollCallback(window, onScrollCallback);
   glfwSetKeyCallback(window, onKeyCallback);
@@ -341,16 +342,17 @@ int main(int argc, char** argv)
                appBase.getSize());
 
   // Model loading happens here
-  helloVk.loadModel("../media/scenes/plane.obj");
-  helloVk.loadModel("../media/scenes/Medieval_building.obj");
-  uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
+  //helloVk.loadModel("../media/scenes/plane.obj");
+  //helloVk.loadModel("../media/scenes/Medieval_building.obj");
+  helloVk.loadModel("../media/scenes/CornellBox-Original.obj");
+  //uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
 
   for (int i = 0; i < 5; i++)
   {
       glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen) + 3, 0.8, cubeDist(gen)));
-      helloVk.addInstance(icosphereIdx, transform);
+      //helloVk.addInstance(icosphereIdx, transform);
   }
 
   helloVk.createOffscreenRender();
@@ -400,6 +402,7 @@ int main(int argc, char** argv)
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+      ImGui::Text("Frame accumulation counter: %d", helloVk.m_rtPushConstants.frameCounter);
 
       renderUI(helloVk);
 

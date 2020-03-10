@@ -26,6 +26,7 @@ layout(push_constant) uniform Constants
   float lightIntensity;
   int   lightType;
   int   frameCounter; // Counts up as long as scene doesn't change, resets to 0 upon scene change
+  bool  pathTrace;
 }
 pushC;
 
@@ -59,10 +60,13 @@ void main()
         prd.hitValue = vec3(0);
         prd.attenuation = vec3(1.f);
 
+        // Closest hit shader selection
+        int hitOffset = pushC.pathTrace ? 1 : 0;
+
         traceNV(topLevelAS, // acceleration structure
             rayFlags,       // rayFlags
             0xFF,           // cullMask
-            0,              // sbtRecordOffset
+            hitOffset,      // sbtRecordOffset
             0,              // sbtRecordStride
             0,              // missIndex
             origin.xyz,     // ray origin

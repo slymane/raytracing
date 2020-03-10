@@ -54,6 +54,7 @@
   <ItemGroup>
     <GLSLValidate Include="shaders\frag_shader.frag" />
     <GLSLValidate Include="shaders\passthrough.vert" />
+    <GLSLValidate Include="shaders\pathtrace.rchit" />
     <GLSLValidate Include="shaders\post.frag" />
     <GLSLValidate Include="shaders\raytrace.rchit" />
     <GLSLValidate Include="shaders\raytrace.rgen" />

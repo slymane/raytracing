@@ -104,6 +104,7 @@ public:
     float     lightIntensity;
     int       lightType;
     int       frameCounter{0};
+    bool      usePathTracing{false};
   };
 
   RtPushConstant m_rtPushConstants;

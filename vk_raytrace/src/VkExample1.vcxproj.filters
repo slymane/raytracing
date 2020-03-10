@@ -145,6 +145,9 @@
     <GLSLValidate Include="shaders\raytraceShadow.rmiss">
       <Filter>shaders</Filter>
     </GLSLValidate>
+    <GLSLValidate Include="shaders\pathtrace.rchit">
+      <Filter>shaders</Filter>
+    </GLSLValidate>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\wavefront.glsl">
