@@ -103,6 +103,7 @@ public:
     glm::vec3 lightPosition;
     float     lightIntensity;
     int       lightType;
+    int       frameCounter{0};
   };
 
   RtPushConstant m_rtPushConstants;
@@ -176,4 +177,6 @@ public:
   nvvkBuffer m_rtSBTBuffer;
 
   void raytrace(const vk::CommandBuffer& cmdBuf, const glm::vec4& clearColor);
+  void updateFrame();
+  void resetFrame();
 };

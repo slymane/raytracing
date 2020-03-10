@@ -246,19 +246,23 @@ static void destroyImgui(const vk::Device& device)
 void renderUI(HelloVulkan& helloVk)
 {
   static int item = 1;
+  bool needRedraw = false;
   if(ImGui::Combo("Up Vector", &item, "X\0Y\0Z\0\0"))
   {
     glm::vec3 pos, eye, up;
     CameraManip.getLookat(pos, eye, up);
     up = glm::vec3(item == 0, item == 1, item == 2);
     CameraManip.setLookat(pos, eye, up);
+    needRedraw = true;
   }
-  ImGui::SliderFloat3("Light Position", &helloVk.m_pushConstant.lightPosition.x, -20.f, 20.f);
-  ImGui::SliderFloat("Light Intensity", &helloVk.m_pushConstant.lightIntensity, 0.f, 100.f);
-  ImGui::RadioButton("Point", &helloVk.m_pushConstant.lightType, 0);
+  needRedraw |= ImGui::SliderFloat3("Light Position", &helloVk.m_pushConstant.lightPosition.x, -20.f, 20.f);
+  needRedraw |= ImGui::SliderFloat("Light Intensity", &helloVk.m_pushConstant.lightIntensity, 0.f, 100.f);
+  needRedraw |= ImGui::RadioButton("Point", &helloVk.m_pushConstant.lightType, 0);
   ImGui::SameLine();
-  ImGui::RadioButton("Infinite", &helloVk.m_pushConstant.lightType, 1);
-  ImGui::Checkbox("Raytrace", &g_useRaytracing);
+  needRedraw |= ImGui::RadioButton("Infinite", &helloVk.m_pushConstant.lightType, 1);
+  needRedraw |= ImGui::Checkbox("Raytrace", &g_useRaytracing);
+  if (needRedraw)
+      helloVk.resetFrame();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -343,9 +347,9 @@ int main(int argc, char** argv)
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
 
-  for (int i = 0; i < 20; i++)
+  for (int i = 0; i < 5; i++)
   {
-      glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen), 0.8, cubeDist(gen)));
+      glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen) + 3, 0.8, cubeDist(gen)));
       helloVk.addInstance(icosphereIdx, transform);
   }
 
@@ -391,7 +395,8 @@ int main(int argc, char** argv)
     if(1 == 1)
     {
       // Edit 3 floats representing a color
-      ImGui::ColorEdit3("Clear color", reinterpret_cast<float*>(&clearColor));
+      if (ImGui::ColorEdit3("Clear color", reinterpret_cast<float*>(&clearColor)))
+       helloVk.resetFrame();
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                   1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

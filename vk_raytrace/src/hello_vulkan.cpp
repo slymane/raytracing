@@ -830,6 +830,7 @@ void HelloVulkan::createRtShaderBindingTable()
 
 void HelloVulkan::raytrace(const vk::CommandBuffer& cmdBuf, const glm::vec4& clearColor)
 {
+  updateFrame();
   m_debug.beginLabel(cmdBuf, "Ray trace");
   // Initializing push constant values
   m_rtPushConstants.clearColor     = clearColor;
@@ -860,4 +861,22 @@ void HelloVulkan::raytrace(const vk::CommandBuffer& cmdBuf, const glm::vec4& cle
                      1);                                                    // depth
 
   m_debug.endLabel(cmdBuf);
+}
+
+void HelloVulkan::updateFrame()
+{
+    static glm::mat4 refCamera;
+    glm::mat4 currentCam = CameraManip.getMatrix();
+
+    if (refCamera != currentCam)
+    {
+        resetFrame();
+        refCamera = currentCam;
+    }
+    m_rtPushConstants.frameCounter++;
+}
+
+void HelloVulkan::resetFrame()
+{
+    m_rtPushConstants.frameCounter = -1;
 }

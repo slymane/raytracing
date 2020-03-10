@@ -23,6 +23,7 @@ layout(push_constant) uniform Constants
   vec3  lightPosition;
   float lightIntensity;
   int   lightType;
+  int   frameNo;
 }
 pushC;
 
@@ -108,7 +109,7 @@ void main()
             tMin,               // ray min range
             direction,          // ray direction
             tMax,               // ray max range
-            1                   // payload (location = 0)
+            1                   // shadow boolean payload (location = 1)
         );
     }
 

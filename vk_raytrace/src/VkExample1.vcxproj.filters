@@ -153,5 +153,8 @@
     <None Include="shaders\raycommon.glsl">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\random.glsl">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

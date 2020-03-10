@@ -64,6 +64,7 @@
     </GLSLValidate>
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\random.glsl" />
     <None Include="shaders\raycommon.glsl" />
     <None Include="shaders\wavefront.glsl" />
   </ItemGroup>
