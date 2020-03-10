@@ -90,38 +90,7 @@ void main()
     vec3 specular = vec3(0);
     vec3 attenuation = vec3(1);
 
-    // Tracing shadow ray only if the light is visible from the surface
-    if(dot(normal, L) > 0) {
-        float tMin = 0.001;
-        float tMax = lightDistance;
-        vec3 origin = gl_WorldRayOriginNV + gl_WorldRayDirectionNV * gl_HitTNV;
-        vec3 direction = L;
-        uint flags = 
-            gl_RayFlagsTerminateOnFirstHitNV | gl_RayFlagsOpaqueNV | gl_RayFlagsSkipClosestHitShaderNV;
-        isShadowed = true;
-        traceNV(
-            topLevelAS,         // acceleration structure
-            flags,              // rayFlags
-            0xFF,               // cullMask
-            0,                  // sbtRecordOffset
-            0,                  // sbtRecordStride
-            1,                  // missIndex
-            origin,             // ray origin
-            tMin,               // ray min range
-            direction,          // ray direction
-            tMax,               // ray max range
-            1                   // shadow boolean payload (location = 1)
-        );
-    }
-
-    if (isShadowed)
-    {
-        attenuation = vec3(0.3);
-    }
-    else
-    {
-        specular = computeSpecular(mat, gl_WorldRayDirectionNV, L, normal);
-    }
+    specular = computeSpecular(mat, gl_WorldRayDirectionNV, L, normal);
 
     vec3 hitValue = vec3(0);
     attenuation *= prd.attenuation;
