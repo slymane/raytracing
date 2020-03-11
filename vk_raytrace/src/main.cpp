@@ -344,7 +344,7 @@ int main(int argc, char** argv)
   // Model loading happens here
   //helloVk.loadModel("../media/scenes/plane.obj");
   //helloVk.loadModel("../media/scenes/Medieval_building.obj");
-  helloVk.loadModel("../media/scenes/CornellBox-Original.obj");
+  helloVk.loadModel("../media/scenes/CornellBox/CornellBox-Original.obj");
   //uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
