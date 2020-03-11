@@ -834,6 +834,7 @@ void HelloVulkan::createRtPipeline()
   m_device.destroy(missSM);
   m_device.destroy(shadowmissSM);
   m_device.destroy(chitSM);
+  m_device.destroy(pathChitSM);
 }
 
 void HelloVulkan::createRtShaderBindingTable()

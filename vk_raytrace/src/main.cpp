@@ -332,7 +332,6 @@ int main(int argc, char** argv)
   appBase.createDepthBuffer();
   appBase.createRenderPass();
   appBase.createFrameBuffers();
-  
 
 
   // Setup Imgui
@@ -392,6 +391,10 @@ int main(int argc, char** argv)
   /* Scene: Many Spheres
   uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
 
+  //helloVk.loadModel("../media/scenes/plane.obj");
+  //helloVk.loadModel("../media/scenes/Medieval_building.obj");
+  helloVk.loadModel("../media/scenes/CornellBox/CornellBox-Original.obj");
+  //uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
   for (int i = 0; i < 5; i++)
