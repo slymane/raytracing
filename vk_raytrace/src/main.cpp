@@ -343,9 +343,9 @@ int main(int argc, char** argv)
                appBase.getSize());
 
   // Model loading happens here
+  boolean animate = false;
 
-  /* Scene: Animation */
-  boolean animate = true;
+  /* Scene: Animation 
   helloVk.loadModel("../media/scenes/plane.obj", glm::scale(glm::vec3(2.0, 1.0, 2.0)));
   uint32_t wusonIdx = helloVk.loadObject("../media/scenes/wuson.obj");
   for (int i = 0; i < 5; i++)
@@ -353,6 +353,7 @@ int main(int argc, char** argv)
       helloVk.addInstance(wusonIdx);
   }
   helloVk.loadModel("../media/scenes/sphere.obj");
+  */
 
 
   /* Scene: Many Objects
@@ -379,14 +380,13 @@ int main(int argc, char** argv)
   }
  */
 
-  /* Scene: Medieval Building
+  /* Scene: Medieval Building  
   helloVk.loadModel("../media/scenes/plane.obj");
   helloVk.loadModel("../media/scenes/Medieval_building.obj");
   */
 
-  /* Scene: Cornel Box
-  helloVk.loadModel("../media/scenes/CornellBox-Original.obj");
-  */
+  /* Scene: Cornel Box */
+  helloVk.loadModel("../media/scenes/CornellBox/CornellBox-Original.obj");
 
   /* Scene: Many Spheres
   uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
@@ -429,6 +429,7 @@ int main(int argc, char** argv)
 
   // Set start time
   auto start = std::chrono::system_clock::now();
+  std::chrono::duration<float> diff;
 
   // Main loop
   while(!glfwWindowShouldClose(window))
@@ -469,7 +470,7 @@ int main(int argc, char** argv)
     if (animate)
     {
         helloVk.resetFrame();
-        std::chrono::duration<float> diff = std::chrono::system_clock::now() - start;
+        diff = std::chrono::system_clock::now() - start;
         helloVk.animationInstances(diff.count());
         helloVk.animationObject(diff.count());
     }
