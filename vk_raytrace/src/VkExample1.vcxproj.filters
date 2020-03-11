@@ -148,6 +148,9 @@
     <GLSLValidate Include="shaders\pathtrace.rchit">
       <Filter>shaders</Filter>
     </GLSLValidate>
+    <GLSLValidate Include="shaders\anim.comp">
+      <Filter>shaders</Filter>
+    </GLSLValidate>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\wavefront.glsl">

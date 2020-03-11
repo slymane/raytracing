@@ -30,6 +30,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_inverse.hpp"
+#include "glm/gtx/transform.hpp"
 
 
 #include "descriptorsets_vkpp.hpp"
@@ -72,7 +73,12 @@ void HelloVulkan::init(const vk::Device&         device,
                        uint32_t                  queueFamily,
                        const vk::Extent2D&       size)
 {
+# if defined(ALLOC_DEDICATED)
   m_alloc.init(device, physicalDevice);
+#elif defined(ALLOC_DMA)
+  m_dmaAllocator.init(device, physicalDevice);
+  m_alloc.init(device, &m_dmaAllocator);
+#endif
   m_device         = device;
   m_physicalDevice = physicalDevice;
   m_queueIndex     = queueFamily;
@@ -93,10 +99,17 @@ void HelloVulkan::updateUniformBuffer()
   ubo.proj[1][1] *= -1;  // Inverting Y for Vulkan
   ubo.viewInverse = glm::inverse(ubo.view);
   ubo.projInverse = glm::inverse(ubo.proj);
-  void* data      =
-      m_device.mapMemory(m_cameraMat.allocation, 0, sizeof(ubo));
+# if defined(ALLOC_DEDICATED)
+  void* data = m_device.mapMemory(m_cameraMat.allocation, 0, sizeof(ubo));
   memcpy(data, &ubo, sizeof(ubo));
   m_device.unmapMemory(m_cameraMat.allocation);
+#elif defined(ALLOC_DMA)
+  void* data = m_dmaAllocator.map(m_cameraMat.allocation);
+  memcpy(data, &ubo, sizeof(ubo));
+  m_dmaAllocator.unmap(m_cameraMat.allocation);
+#endif
+
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -417,6 +430,15 @@ void HelloVulkan::destroyResources()
   m_device.destroy(m_rtPipeline);
   m_device.destroy(m_rtPipelineLayout);
   m_alloc.destroy(m_rtSBTBuffer);
+#if defined(ALLOC_DMA)
+  m_dmaAllocator.deinit();
+#endif
+
+  //Animation
+  m_device.destroy(m_compDescPool);
+  m_device.destroy(m_compDescSetLayout);
+  m_device.destroy(m_compPipeline);
+  m_device.destroy(m_compPipelineLayout);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -623,7 +645,11 @@ void HelloVulkan::initRayTracing()
   auto properties = m_physicalDevice.getProperties2<vk::PhysicalDeviceProperties2,
                                                     vk::PhysicalDeviceRayTracingPropertiesNV>();
   m_rtProperties  = properties.get<vk::PhysicalDeviceRayTracingPropertiesNV>();
+#if defined(ALLOC_DEDICATED)
   m_rtBuilder.setup(m_device, m_physicalDevice, m_queueIndex);
+#elif defined(ALLOC_DMA)
+  m_rtBuilder.setup(m_device, m_dmaAllocator, m_queueIndex);
+#endif
 }
 
 vk::GeometryNV HelloVulkan::objectToVkGeometryNV(const ObjModel& model)
@@ -650,32 +676,32 @@ vk::GeometryNV HelloVulkan::objectToVkGeometryNV(const ObjModel& model)
 void HelloVulkan::createBottomLevelAS()
 {
   // BLAS - Storing each primitive in a geometry
-  std::vector<std::vector<vk::GeometryNV>> blas;
-  blas.reserve(m_objModel.size());
+  m_blas.reserve(m_objModel.size());
   for(size_t i = 0; i < m_objModel.size(); i++)
   {
     auto geo = objectToVkGeometryNV(m_objModel[i]);
     // We could add more geometry in each BLAS, but we add only one for now
-    blas.push_back({geo});
+    m_blas.push_back({geo});
   }
-  m_rtBuilder.buildBlas(blas);
+  m_rtBuilder.buildBlas(m_blas, vk::BuildAccelerationStructureFlagBitsNV::eAllowUpdate
+                                    | vk::BuildAccelerationStructureFlagBitsNV::ePreferFastBuild);
 }
 
 void HelloVulkan::createTopLevelAS()
 {
-  std::vector<nvvkpp::RaytracingBuilder::Instance> tlas;
-  tlas.reserve(m_objInstance.size());
+  m_tlas.reserve(m_objInstance.size());
   for(int i = 0; i < static_cast<int>(m_objInstance.size()); i++)
   {
     nvvkpp::RaytracingBuilder::Instance rayInst;
     rayInst.transform  = m_objInstance[i].transform;  // Position of the instance
     rayInst.instanceId = i;                           // gl_InstanceID
     rayInst.blasId     = m_objInstance[i].objIndex;
-    rayInst.hitGroupId = 0;  // We will use the same hit group for all objects
+    rayInst.hitGroupId = 0;
     rayInst.flags      = vk::GeometryInstanceFlagBitsNV::eTriangleCullDisable;
-    tlas.emplace_back(rayInst);
+    m_tlas.emplace_back(rayInst);
   }
-  m_rtBuilder.buildTlas(tlas, vk::BuildAccelerationStructureFlagBitsNV::ePreferFastTrace);
+  m_rtBuilder.buildTlas(m_tlas, vk::BuildAccelerationStructureFlagBitsNV::ePreferFastTrace
+                                    | vk::BuildAccelerationStructureFlagBitsNV::eAllowUpdate);
 }
 
 void HelloVulkan::createRtDescriptorSet()
@@ -886,4 +912,99 @@ void HelloVulkan::updateFrame()
 void HelloVulkan::resetFrame()
 {
     m_rtPushConstants.frameCounter = -1;
+}
+
+void HelloVulkan::animationInstances(float time)
+{
+    const int32_t nbWuson   = static_cast<int32_t>(m_objInstance.size() - 2);
+    const float deltaAngle  = 6.28318530718f / static_cast<float>(nbWuson);
+    const float wusonLength = 3.0f;
+    const float radius      = wusonLength / (2.0f * sin(deltaAngle / 2.0f));
+    const float offset      = time * 0.5f;
+
+    for (int i = 0; i < nbWuson; i++)
+    {
+        int wusonIdx        = i + 1;
+        ObjInstance& inst   = m_objInstance[wusonIdx];
+        inst.transform      = glm::rotate(i * deltaAngle + offset, glm::vec3(0.0f, 1.0f, 0.0f)) 
+                         * glm::translate(glm::vec3(radius, 0.f, 0.f));
+        inst.transformIT = glm::inverseTranspose(inst.transform);
+
+        nvvkpp::RaytracingBuilder::Instance& tinst = m_tlas[wusonIdx];
+        tinst.transform                            = inst.transform;
+    }
+
+    // Update the buffer
+    vk::DeviceSize bufferSize = m_objInstance.size() * sizeof(ObjInstance);
+    nvvkBuffer stagingBuffer = m_alloc.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferSrc,
+                                                    vk::MemoryPropertyFlagBits::eHostVisible);
+
+    // Copy data to staging buffer
+    auto* gInst = m_alloc.map(stagingBuffer);
+    memcpy(gInst, m_objInstance.data(), bufferSize);
+    m_alloc.unmap(stagingBuffer);
+
+    // Copy staging buffer to the Scene Description buffer
+    nvvkpp::SingleCommandBuffer genCmdBuf(m_device, m_queueIndex);
+    vk::CommandBuffer cmdBuf = genCmdBuf.createCommandBuffer();
+    cmdBuf.copyBuffer(stagingBuffer.buffer, m_sceneDesc.buffer, vk::BufferCopy(0, 0, bufferSize));
+    m_debug.endLabel(cmdBuf);
+    genCmdBuf.flushCommandBuffer(cmdBuf);
+    m_alloc.destroy(stagingBuffer);
+
+    // Update...
+    m_rtBuilder.updateTlasMatrices(m_tlas);
+} 
+
+void HelloVulkan::animationObject(float time)
+{
+    ObjModel& model = m_objModel[2];
+
+    updateCompDescriptors(model.vertexBuffer);
+
+    nvvkpp::SingleCommandBuffer genCmdBuf(m_device, m_queueIndex);
+    vk::CommandBuffer           cmdBuf = genCmdBuf.createCommandBuffer();
+
+    cmdBuf.bindPipeline(vk::PipelineBindPoint::eCompute, m_compPipeline);
+    cmdBuf.bindDescriptorSets(vk::PipelineBindPoint::eCompute, m_compPipelineLayout, 0,
+        { m_compDescSet }, {});
+    cmdBuf.pushConstants(m_compPipelineLayout, vk::ShaderStageFlagBits::eCompute, 0, sizeof(float),
+        &time);
+    cmdBuf.dispatch(model.nbVertices, 1, 1);
+    genCmdBuf.flushCommandBuffer(cmdBuf);
+
+    // Update...
+    m_rtBuilder.updateBlas(2);
+}
+
+void HelloVulkan::createCompDesciprotrs()
+{
+    m_compDescSetLayoutBind.emplace_back(vk::DescriptorSetLayoutBinding(
+        0, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eCompute));
+
+    m_compDescSetLayout = nvvkpp::util::createDescriptorSetLayout(m_device, m_compDescSetLayoutBind);
+    m_compDescPool = nvvkpp::util::createDescriptorPool(m_device, m_compDescSetLayoutBind, 1);
+    m_compDescSet = nvvkpp::util::createDescriptorSet(m_device, m_compDescPool, m_compDescSetLayout);
+}
+
+void HelloVulkan::updateCompDescriptors(nvvkBuffer& vertex)
+{
+    std::vector<vk::WriteDescriptorSet> writes;
+    vk::DescriptorBufferInfo            dbiUnif{ vertex.buffer, 0, VK_WHOLE_SIZE };
+    writes.emplace_back(
+        nvvkpp::util::createWrite(m_compDescSet, m_compDescSetLayoutBind[0], &dbiUnif));
+    m_device.updateDescriptorSets(static_cast<uint32_t>(writes.size()), writes.data(), 0, nullptr);
+}
+
+void HelloVulkan::createCompPipelines()
+{
+    // pushing time
+    vk::PushConstantRange push_constants = { vk::ShaderStageFlagBits::eCompute, 0, sizeof(float) };
+    vk::PipelineLayoutCreateInfo layout_info{ {}, 1, &m_compDescSetLayout, 1, &push_constants };
+    m_compPipelineLayout = m_device.createPipelineLayout(layout_info);
+    vk::ComputePipelineCreateInfo computePipelineCreateInfo{ {}, {}, m_compPipelineLayout };
+
+    computePipelineCreateInfo.stage = nvvkpp::util::loadShader(m_device, nvvkpp::util::readFile("shaders/anim.comp.spv"), vk::ShaderStageFlagBits::eCompute);
+    m_compPipeline = m_device.createComputePipelines({}, computePipelineCreateInfo, nullptr)[0];
+    m_device.destroy(computePipelineCreateInfo.stage.module);
 }

@@ -52,6 +52,7 @@
     <ClInclude Include="hello_vulkan.h" />
   </ItemGroup>
   <ItemGroup>
+    <GLSLValidate Include="shaders\anim.comp" />
     <GLSLValidate Include="shaders\frag_shader.frag" />
     <GLSLValidate Include="shaders\passthrough.vert" />
     <GLSLValidate Include="shaders\pathtrace.rchit" />
@@ -118,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1;VK_USE_PLATFORM_WIN32_KHR;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(SolutionDir)libs\imgui;$(SolutionDir)libs\glm;$(SolutionDir)libs\glfw\include;$(SolutionDir)common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%VULKAN_SDK%\include;$(SolutionDir)libs\imgui;$(SolutionDir)libs\glm;$(SolutionDir)libs\glfw\include;$(SolutionDir)common;$(SolutionDir)shared_external;$(SolutionDir)shared_sources;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>

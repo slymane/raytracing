@@ -47,6 +47,7 @@
 #include "appbase_vkpp.hpp"
 #include "commands_vkpp.hpp"
 #include "context_vkpp.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 #include "glm/gtx/transform.hpp"
 #include "hello_vulkan.h"
 #include "manipulator.h"
@@ -331,6 +332,7 @@ int main(int argc, char** argv)
   appBase.createDepthBuffer();
   appBase.createRenderPass();
   appBase.createFrameBuffers();
+  
 
 
   // Setup Imgui
@@ -342,18 +344,62 @@ int main(int argc, char** argv)
                appBase.getSize());
 
   // Model loading happens here
-  //helloVk.loadModel("../media/scenes/plane.obj");
-  //helloVk.loadModel("../media/scenes/Medieval_building.obj");
+
+  /* Scene: Animation */
+  boolean animate = true;
+  helloVk.loadModel("../media/scenes/plane.obj", glm::scale(glm::vec3(2.0, 1.0, 2.0)));
+  uint32_t wusonIdx = helloVk.loadObject("../media/scenes/wuson.obj");
+  for (int i = 0; i < 5; i++)
+  {
+      helloVk.addInstance(wusonIdx);
+  }
+  helloVk.loadModel("../media/scenes/sphere.obj");
+
+
+  /* Scene: Many Objects
+
+  helloVk.loadModel("../media/scenes/cube.obj");
+  helloVk.loadModel("../media/scenes/plane.obj");
+
+  std::random_device rd; // Used to obtain seed for the random number engine
+  std::mt19937 gen(rd()); // mersenne_twitster_engine seeded with rd()
+  std::normal_distribution<float> dis(1.0f, 1.0f);
+  std::normal_distribution<float> disn(0.05f, 0.05f);
+
+  for (int i = 0; i < 2000; ++i)
+  {
+      helloVk.loadModel("../media/scenes/cube_multi.obj");
+      HelloVulkan::ObjInstance& inst = helloVk.m_objInstance.back();
+
+      float scale    = fabsf(disn(gen));
+      glm::mat4 t = glm::translate(glm::vec3(dis(gen), 2.0f + dis(gen), dis(gen)));
+      t          *= glm::rotate(dis(gen), glm::vec3(1.f, 0.f, 0.f));
+      t          *= glm::scale(glm::vec3(scale));
+      inst.transform   = t;
+      inst.transformIT = glm::inverseTranspose(inst.transform);
+  }
+ */
+
+  /* Scene: Medieval Building
+  helloVk.loadModel("../media/scenes/plane.obj");
+  helloVk.loadModel("../media/scenes/Medieval_building.obj");
+  */
+
+  /* Scene: Cornel Box
   helloVk.loadModel("../media/scenes/CornellBox-Original.obj");
-  //uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
+  */
+
+  /* Scene: Many Spheres
+  uint32_t icosphereIdx = helloVk.loadObject("../media/scenes/icosphere.obj");
+
   std::default_random_engine gen;
   std::normal_distribution<float> cubeDist(0.0f, 10.0f);
-
   for (int i = 0; i < 5; i++)
   {
       glm::mat4 transform = glm::translate(glm::mat4(1), glm::vec3(cubeDist(gen) + 3, 0.8, cubeDist(gen)));
-      //helloVk.addInstance(icosphereIdx, transform);
+      helloVk.addInstance(icosphereIdx, transform);
   }
+  */
 
   helloVk.createOffscreenRender();
   helloVk.createDescriptorSetLayout();
@@ -372,7 +418,14 @@ int main(int argc, char** argv)
   helloVk.createRtPipeline();
   helloVk.createRtShaderBindingTable();
 
+  // Animation resources
+  helloVk.createCompDesciprotrs();
+  helloVk.createCompPipelines();
+
   glm::vec4 clearColor = glm::vec4(1, 1, 1, 1.00f);
+
+  // Set start time
+  auto start = std::chrono::system_clock::now();
 
   // Main loop
   while(!glfwWindowShouldClose(window))
@@ -409,6 +462,14 @@ int main(int argc, char** argv)
       ImGui::Render();
     }
 
+    // Animate
+    if (animate)
+    {
+        helloVk.resetFrame();
+        std::chrono::duration<float> diff = std::chrono::system_clock::now() - start;
+        helloVk.animationInstances(diff.count());
+        helloVk.animationObject(diff.count());
+    }
 
     // render the scene
     appBase.prepareFrame();

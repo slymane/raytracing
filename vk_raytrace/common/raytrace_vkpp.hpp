@@ -52,12 +52,13 @@ const vk::AccelerationStructureNV& tlas = m.rtBuilder.getAccelerationStructure()
 #include "commands_vkpp.hpp"
 #include "debug_util_vkpp.hpp"
 
+
 #if defined(ALLOC_DEDICATED)
 #include "allocator_dedicated_vkpp.hpp"
 #elif defined(ALLOC_VMA)
-#include "allocator_vma_vkpp.hpp"
+#include "nvvkpp/allocator_vma_vkpp.hpp"
 #elif defined(ALLOC_DMA)
-#include "allocator_dma_vkpp.hpp"
+#include "nvvkpp/allocator_dma_vkpp.hpp"
 #endif  // ALLOC_DEDICATED
 
 #include "glm/glm.hpp"
@@ -94,8 +95,8 @@ struct RaytracingBuilder
   using nvvkAllocator       = nvvkpp::AllocatorVma;
   using nvvkMemoryAllocator = VmaAllocator;
 #elif defined(ALLOC_DMA)
-  using nvvkAccel           = nvvkpp::AccelerationVma;
-  using nvvkBuffer          = nvvkpp::BufferVma;
+  using nvvkAccel           = nvvkpp::AccelerationDma;
+  using nvvkBuffer          = nvvkpp::BufferDma;
   using nvvkAllocator       = nvvkpp::AllocatorDma;
   using nvvkMemoryAllocator = nvvk::DeviceMemoryAllocator;
 #endif
@@ -110,7 +111,11 @@ struct RaytracingBuilder
     m_device     = device;
     m_queueIndex = queueIndex;
     m_debug.setup(device);
+#if defined(ALLOC_DMA)
+    m_alloc.init(device, &memoryAllocator);
+#else
     m_alloc.init(device, memoryAllocator);
+#endif
   }
 
   // This is an instance of a BLAS
@@ -205,6 +210,37 @@ struct RaytracingBuilder
     genCmdBuf.flushCommandBuffer(cmdBuf);
     m_alloc.destroy(scratchBuffer);
     m_alloc.flushStaging();
+  }
+
+  //--------------------------------------------------------------------------------------------------
+  // Refit the BLAS from updated buffers
+  //
+  void updateBlas(uint32_t blasIdx)
+  {
+      Blas& blas = m_blas[blasIdx];
+
+      // Compute the amount of scratch memory required by the AS builder to update the TLAS
+      vk::AccelerationStructureMemoryRequirementsInfoNV memoryRequirementsInfo{
+          vk::AccelerationStructureMemoryRequirementsTypeNV::eUpdateScratch, blas.as.accel };
+      vk::DeviceSize scratchSize =
+          m_device.getAccelerationStructureMemoryRequirementsNV(memoryRequirementsInfo)
+          .memoryRequirements.size;
+      // Allocate the scratch buffer
+      nvvkBuffer scratchBuffer =
+          m_alloc.createBuffer(scratchSize, vk::BufferUsageFlagBits::eRayTracingNV);
+
+      // Update the instance buffer on the device side and build the TLAS
+      nvvkpp::SingleCommandBuffer genCmdBuf(m_device, m_queueIndex);
+      vk::CommandBuffer           cmdBuf = genCmdBuf.createCommandBuffer();
+
+
+      // Update the acceleration structure. Note the VK_TRUE parameter to trigger the update,
+      // and the existing BLAS being passed and updated in place
+      cmdBuf.buildAccelerationStructureNV(blas.asInfo, nullptr, 0, VK_TRUE, blas.as.accel,
+          blas.as.accel, scratchBuffer.buffer, 0);
+
+      genCmdBuf.flushCommandBuffer(cmdBuf);
+      m_alloc.destroy(scratchBuffer);
   }
 
   //--------------------------------------------------------------------------------------------------

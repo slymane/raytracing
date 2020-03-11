@@ -26,15 +26,23 @@
  */
 #pragma once
 
+// #VkayRay
+// Memory Allocation Methods
 #define ALLOC_DEDICATED
-#include "raytrace_vkpp.hpp"
+//#define ALLOC_DMA
 
+#if defined(ALLOC_DEDICATED)
 #include "allocator_dedicated_vkpp.hpp"
-#include "debug_util_vkpp.hpp"
-
-
 using nvvkBuffer  = nvvkpp::BufferDedicated;
 using nvvkTexture = nvvkpp::TextureDedicated;
+#elif defined(ALLOC_DMA)
+#include "nvvkpp/allocator_dma_vkpp.hpp"
+using nvvkBuffer = nvvkpp::BufferDma;
+using nvvkTexture = nvvkpp::TextureDma;
+#endif
+
+#include "raytrace_vkpp.hpp"
+#include "debug_util_vkpp.hpp"
 
 //--------------------------------------------------------------------------------------------------
 // Simple rasterizer of OBJ objects
@@ -127,8 +135,18 @@ public:
   std::vector<nvvkTexture> m_textures;   // vector of all textures of the scene
 
   nvvkpp::RaytracingBuilder m_rtBuilder;
+  std::vector<nvvkpp::RaytracingBuilder::Instance> m_tlas;
+  std::vector<std::vector<vk::GeometryNV>> m_blas;
 
+  #if defined(ALLOC_DEDICATED)
+  #include "allocator_dedicated_vkpp.hpp"
   nvvkpp::AllocatorDedicated m_alloc;   // Allocator for buffer, images, acceleration structures
+  #elif defined(ALLOC_DMA)
+  #include "nvvkpp/allocator_dma_vkpp.hpp"
+  nvvkpp::AllocatorDma m_alloc;         // Allocator for buffer, images, acceleration structures
+  nvvk::DeviceMemoryAllocator m_dmaAllocator;
+  #endif
+  
   nvvkpp::DebugUtil          m_debug;   // Utility to name objects
   vk::Device                 m_device;  // Logical device
   vk::PhysicalDevice         m_physicalDevice;  // Current GPU
@@ -177,7 +195,23 @@ public:
   void       createRtShaderBindingTable();
   nvvkBuffer m_rtSBTBuffer;
 
+  // Path tracing
   void raytrace(const vk::CommandBuffer& cmdBuf, const glm::vec4& clearColor);
   void updateFrame();
   void resetFrame();
+
+  // Animation
+  void animationInstances(float time);
+  void animationObject(float time);
+  void createCompDesciprotrs();
+  void updateCompDescriptors(nvvkBuffer& vertex);
+  void createCompPipelines();
+
+  std::vector<vk::DescriptorSetLayoutBinding> m_compDescSetLayoutBind;
+  vk::DescriptorPool                          m_compDescPool;
+  vk::DescriptorSetLayout                     m_compDescSetLayout;
+  vk::DescriptorSet                           m_compDescSet;
+  vk::Pipeline                                m_compPipeline;
+  vk::PipelineLayout                          m_compPipelineLayout;
+  
 };
