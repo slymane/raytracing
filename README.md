@@ -1,4 +1,4 @@
-# Simple Hardware Ray Tracing - Jagi Natarajan | Eric Slyman
+# Hardware Ray Tracing - Jagi Natarajan | Eric Slyman
 
 Implementation of ray tracing in both C++ with Vulkan backend and Javascript with WebGL backend with several additional extensions.
 
@@ -70,6 +70,9 @@ The skeleton for this code is a modified version of A3 with all logic pulled out
 ![75000-frame accumulation path trace](docs/content//path_tracing_75k.png)
 ![Path traced cubes](docs/content//path_tracing_cubes.png)
 ![Path tracing with textures](docs/content//path_tracing_textures.png)
+
+Gfycat Links
+
 [Many Cubes](https://gfycat.com/obviousimperturbablefluke.gif)
 
 [Reflections](https://gfycat.com/unnaturalsmoggyfruitfly.gif)
