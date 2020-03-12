@@ -28,6 +28,23 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 - Time based parameterization of colors
 - Mouse based parameterization of light source position
 
+## Results
+
+### C++/Vulkan
+
+![path tracing enabled](results/real_path_tracing.png)
+![75000-frame accumulation path trace](results/path_tracing_75k.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+[Many Cubes](https://gfycat.com/obviousimperturbablefluke.gif)\
+[Reflections](https://gfycat.com/unnaturalsmoggyfruitfly.gif)\
+[Animation](https://gfycat.com/willingglossyclumber.gif)\
+[Monte Carlo Path Tracing](https://gfycat.com/snoopyfilthyafricanaugurbuzzard.gif)\
+[Textured Path Tracing](https://gfycat.com/capitalsparsearchaeopteryx.gif)
+
+### JS/WebGL
+
+![The WebGL raytracer](results/webgl_lambertian.png)
 ## Setup
 
 ### C++/Vulkan
@@ -51,17 +68,3 @@ It is necessary to run a simple web server to get this project working due to lo
 ### JS/WebGL
 
 The skeleton for this code is a modified version of A3 with all logic pulled out to centralized sources. index.html can display a canvas for each task where the function `setupTask("ray-1", Ray1, true)` connects the canvas with id *ray-1* to the javascript function *Ray1* in the file *ray1.js*. The task file *Ray1.js* handles the setup prior to glsl. Mostly, this is loading the necessary parameters into buffers for the glsl. The glsl code has been pulled into shader files under `webgl_raytrace/shaders/`. Note that the vertex shader has very little code in it, as we want to run our program for each pixel when ray tracing. The main ray tracing code can all be found in `webgl_raytrace/shaders/fragment.glsl`.
-
-## Samples
-
-### C++/Vulkan
-
-![path tracing enabled](docs/content/real_path_tracing.png)
-![75000-frame accumulation path trace](docs/content/path_tracing_75k.png)
-![Path tracing with textures](docs/content/path_tracing_textures.png)
-![Path tracing with textures](docs/content/path_tracing_textures.png)
-![Many cubes](https://thumbs.gfycat.com/ObviousImperturbableFluke-size_restricted.gif)
-
-### JS/WebGL
-
-![The WebGL raytracer](docs/content/webgl_lambertian.png)
