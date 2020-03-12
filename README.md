@@ -28,19 +28,6 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 - Time based parameterization of colors
 - Mouse based parameterization of light source position
 
-## Results
-
-### C++/Vulkan
-
-![path tracing enabled](results/real_path_tracing.png)
-![75000-frame accumulation path trace](results/path_tracing_75k.png)
-![Path tracing with textures](results/path_tracing_textures.png)
-![Path tracing with textures](results/path_tracing_textures.png)
-![Many cubes](https://thumbs.gfycat.com/ObviousImperturbableFluke-size_restricted.gif)
-
-### JS/WebGL
-
-![The WebGL raytracer](results/webgl_lambertian.png)
 ## Setup
 
 ### C++/Vulkan
@@ -67,3 +54,14 @@ The skeleton for this code is a modified version of A3 with all logic pulled out
 
 ## Samples
 
+### C++/Vulkan
+
+![path tracing enabled](results/real_path_tracing.png)
+![75000-frame accumulation path trace](results/path_tracing_75k.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+![Many cubes](https://thumbs.gfycat.com/ObviousImperturbableFluke-size_restricted.gif)
+
+### JS/WebGL
+
+![The WebGL raytracer](results/webgl_lambertian.png)
