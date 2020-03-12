@@ -36,10 +36,10 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 ![75000-frame accumulation path trace](results/path_tracing_75k.png)
 ![Path tracing with textures](results/path_tracing_textures.png)
 ![Path tracing with textures](results/path_tracing_textures.png)
-[Many Cubes](https://gfycat.com/obviousimperturbablefluke.gif)
-[Reflections](https://gfycat.com/unnaturalsmoggyfruitfly.gif)
-[Animation](https://gfycat.com/willingglossyclumber.gif)
-[Monte Carlo Path Tracing](https://gfycat.com/snoopyfilthyafricanaugurbuzzard.gif)
+[Many Cubes](https://gfycat.com/obviousimperturbablefluke.gif)\
+[Reflections](https://gfycat.com/unnaturalsmoggyfruitfly.gif)\
+[Animation](https://gfycat.com/willingglossyclumber.gif)\
+[Monte Carlo Path Tracing](https://gfycat.com/snoopyfilthyafricanaugurbuzzard.gif)\
 [Textured Path Tracing](https://gfycat.com/capitalsparsearchaeopteryx.gif)
 
 ### JS/WebGL
