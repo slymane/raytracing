@@ -1,8 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Hardware Ray Tracing - Jagi Natarajan | Eric Slyman</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="md.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
 <body>
-
-<h1>Test html please ignore</h1>
-
+<header id="title-block-header">
+<h1 class="title">Hardware Ray Tracing - Jagi Natarajan | Eric Slyman</h1>
+</header>
+<p>Implementation of ray tracing in both C++ with Vulkan backend and Javascript with WebGL backend with several additional extensions.</p>
+<h2 id="summary-of-features">Summary of Features</h2>
+<h3 id="cvulkan">C++/Vulkan</h3>
+<ul>
+<li>Perspective camera</li>
+<li>Simple shadows</li>
+<li>Reflections</li>
+<li>Lambertian shading</li>
+<li>Blinn-Phong shading</li>
+<li>Texture support</li>
+<li>Animation wrt positions (parameterization of world matrix)</li>
+<li>Animation wrt mesh vertices (time based compute shader)</li>
+<li>Super-sampling (Frame jitter accumulation over time)</li>
+<li>Super-sampling (Multi samples per frame)</li>
+<li>Monte Carlo Path tracing (w/Lambertian shading only)</li>
+<li>Rendering control via debug panel</li>
+<li>Janky wasd movement</li>
+</ul>
+<h3 id="jswebgl">JS/WebGL</h3>
+<ul>
+<li>Perspective camera</li>
+<li>Lambertian shading</li>
+<li>Blinn-Phong shading</li>
+<li>Time based parameterization of colors</li>
+<li>Mouse based parameterization of light source position</li>
+</ul>
+<h2 id="instructions">Instructions</h2>
+<h3 id="cvulkan-1">C++/Vulkan</h3>
+<p>Requirements</p>
+<ul>
+<li>An NVIDIA GPU with support for the <code>VK_NV_ray_trace</code> extension (&gt;= GTX 1060)</li>
+<li><a href="https://visualstudio.microsoft.com/downloads/">Visual Studio</a> (Install the Desktop Development With C++ package)</li>
+<li><a href="https://vulkan.lunarg.com/sdk/home">Vulkan SDK</a></li>
+</ul>
+<p>The VKExamples.sln solution within the vk_raytrace folder contains our extended VKExample1 project. Assuming the above requirements are satisfied, the solution should build and launch the vulkan window successfully. A debug panel allows for control of some of the scene properties, and on-the-fly toggling between using raytracing and the original object-order renderer that the example project contained.</p>
+<h3 id="jswebgl-1">JS/WebGL</h3>
+<p>It is necessary to run a simple web server to get this project working due to loading external shaders. Navigate to the Web directory and run <code>python3 -m http.server</code>, then point your browser to <code>localhost:8000</code>. You should see a lambertian-shaded sphere, smoothly alternating between two colors. As you move the mouse around the canvas, the direction of the point light should change as well.</p>
+<h2 id="code-guide">Code Guide</h2>
+<h3 id="cvulkan-2">C++/Vulkan</h3>
+<p>We started with the <code>VKExample1</code> project which implements the basic rasterization pipeline, and extended it to support raytracing following <a href="https://nvpro-samples.github.io/vk_raytracing_tutorial/">this tutorial</a>. We added boilerplate code to <code>hello_vulkan.cpp</code>, to support configuring and using the raytracing pipeline instead. The <code>main.cpp</code> file calls into <code>hello_vulkan.cpp</code> to set up the pipeline, then sets up the scene by loading models and instances, and then runs a render loop, sampling user input, updating uniforms and instances, and calling either the rasterize() or raytrace() function. The raytracing pipeline consists of several GLSL shaders that correspond to specific pipeline stages, located in the <code>shaders</code> subfolder.</p>
+<p>The <code>raytrace.rgen</code> ray generation shader runs on every fragment, akin to a fragment shader, and generates a ray for each fragment from the camera matrices. The shader then calls the <code>traceNV()</code> raytrace function, and stores the resulting color into the image buffer. This shader also implements a jittering feature - if the scene experiences no changes, the emanating rays are jittered by a random amount, and the resulting color value is averaged into the existing image. This feature is what allows for path tracing that progressively gets better over time, as more random rays are sampled leading to a more accurate monte-carlo approximation. Our debug GUI shows the number of frames that have been accumulated into the image on the screen.</p>
+<p>The <code>raytrace.rchit</code> is the closest-hit shader that implements blinn-phong lighting, reflections, and transparency, in a similar manner to Assignment 2. The <code>wavefront.glsl</code> shader, which contains structures for data from OBJ file materials, helpfully performs a lot of the lighting work for us. The closest-hit shader also casts out shadow rays, which use a minimal boolean ray payload with a custom miss shader, <code>raytraceShadow.rmiss</code>, used to figure out if a point or directional light is occluded. If the closest-hit shader can’t be invoked because a ray hit no geometry, the <code>raytrace.rmiss</code> shader is invoked, which simply returns the attenuated clear color.</p>
+<p>The <code>pathtrace.rchit</code> shader contains a monte-carlo path tracing implementation, supporting only diffuse materials. When a pixel ray collides with an object, a random ray is picked uniformly from the hemisphere oriented with the hit location’s normal vector, and traced into the scene again, propagating light back into the pixel ray. The monte-carlo aspect of this process happens automatically, due to the jitter averaging functionality in <code>raytrace.rgen</code>.</p>
+<h3 id="jswebgl-2">JS/WebGL</h3>
+<p>The skeleton for this code is a modified version of A3 with all logic pulled out to centralized sources. index.html can display a canvas for each task where the function <code>setupTask("ray-1", Ray1, true)</code> connects the canvas with id <em>ray-1</em> to the javascript function <em>Ray1</em> in the file <em>ray1.js</em>. The task file <em>Ray1.js</em> handles the setup prior to glsl. Mostly, this is loading the necessary parameters into buffers for the glsl. The glsl code has been pulled into shader files under <code>webgl_raytrace/shaders/</code>. Note that the vertex shader has very little code in it, as we want to run our program for each pixel when ray tracing. The main ray tracing code can all be found in <code>webgl_raytrace/shaders/fragment.glsl</code>.</p>
+<h2 id="results">Results</h2>
+<h3 id="cvulkan-3">C++/Vulkan</h3>
+<p><img src="content/many_objects.png" alt="many cubes" /> <img src="content/texture_reflection.png" alt="reflection" /> <img src="content/real_path_tracing.png" alt="path tracing enabled" /> <img src="content/path_tracing_75k.png" alt="75000-frame accumulation path trace" /> <img src="content/path_tracing_cubes.png" alt="Path traced cubes" /> <img src="content/path_tracing_textures.png" alt="Path tracing with textures" /></p>
+<div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/ObviousImperturbableFluke' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+<div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/UnnaturalSmoggyFruitfly' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+<div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/WillingGlossyClumber' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+<div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/SnoopyFilthyAfricanaugurbuzzard' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+<div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/CapitalSparseArchaeopteryx' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
+<h3 id="jswebgl-3">JS/WebGL</h3>
+<figure>
+<img src="content/webgl_lambertian.png" alt="" /><figcaption>The WebGL raytracer</figcaption>
+</figure>
 </body>
 </html>
