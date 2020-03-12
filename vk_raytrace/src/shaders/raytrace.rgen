@@ -34,15 +34,15 @@ pushC;
 void main()
 {
     vec3 hitVal = vec3(0.0);
-    uint seed = tea(gl_LaunchIDNV.y * gl_LaunchSizeNV.x + gl_LaunchIDNV.x, pushC.frameCounter);
+    prd.seed = tea(gl_LaunchIDNV.y * gl_LaunchSizeNV.x + gl_LaunchIDNV.x, pushC.frameCounter);
 
     // Multisampling loop
     const int SAMPLES_PER_PIXEL = 1;
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++)
     {
         // Use pixel center for first draw each time scene changes
-        float r1 = rnd(seed);
-        float r2 = rnd(seed);
+        float r1 = rnd(prd.seed);
+        float r2 = rnd(prd.seed);
         vec2 subpixelJitter = pushC.frameCounter == 0 ? vec2(0.5f, 0.5f) : vec2(r1, r2);
 
         const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + subpixelJitter;

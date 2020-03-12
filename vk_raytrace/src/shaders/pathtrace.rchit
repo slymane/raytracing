@@ -36,12 +36,12 @@ hitAttributeNV vec3 attribs;
 // evenly distributed unit vector in the y>0 hemisphere
 vec3 generate_hemisphere_vector(float r1, float r2)
 {
-    float phi = r1 * 2 * M_PI;
-    float theta = acos(1 - 2 * r2);
-    return vec3(cos(theta) * sin(phi), sin(theta), cos(theta)*cos(phi));
+    float phi = r1 * 2.0 * M_PI;
+    float theta = acos(1.0 - r2);
+    return vec3(sin(theta) * cos(phi), cos(theta), sin(theta)*sin(phi));
 }
 
-mat3 transform_from_normal(vec3 N)
+mat3 normal_y_basis(vec3 N)
 {
     vec3 u;
     if (abs(N.x) > abs(N.y)) 
@@ -81,18 +81,13 @@ void main()
     // Transforming the position to world space
     worldPos = vec3(scnDesc.i[gl_InstanceID].transfo * vec4(worldPos, 1.0));
 
-    uint seed = tea(gl_LaunchIDNV.y * gl_LaunchSizeNV.x + gl_LaunchIDNV.x, pushC.frameCounter);
+    float r1 = rnd(prd.seed);
+    float r2 = rnd(prd.seed);
 
-    float r1 = rnd(seed);
-    float r2 = rnd(seed);
-
-    vec3 monteCarloDir = transform_from_normal(normal) * generate_hemisphere_vector(r1, r2);
-    const float p = 1 / (2 * M_PI);
-    float cos_theta = dot(monteCarloDir, normal);
+    vec3 monteCarloDir = normal_y_basis(normal) * generate_hemisphere_vector(r1, r2);
+    float cos_theta = max(dot(monteCarloDir, normal), 0);
 
     WaveFrontMaterial mat = materials[objId].m[v0.matIndex];
-
-    vec3 incoming = vec3(0);
 
     if (prd.recursionDepth > 0)
     {
@@ -104,14 +99,18 @@ void main()
             1,                    // sbtRecordOffset
             0,                    // sbtRecordStride
             0,                    // missIndex
-            worldPos,               // ray origin
+            worldPos,             // ray origin
             0.001,                // ray min range
-            monteCarloDir,            // ray direction
+            monteCarloDir,        // ray direction
             10000.0,              // ray max range
             0                     // payload (location = 0)
         );
         prd.recursionDepth++;
-    }
 
-    prd.hitValue = mat.emission + ((mat.diffuse / M_PI) * prd.hitValue * cos_theta / p);
+        prd.hitValue = mat.emission + (2 * mat.diffuse * prd.hitValue * cos_theta);
+    }
+    else
+    {
+        prd.hitValue = mat.emission;
+    }
 }

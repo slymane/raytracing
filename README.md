@@ -33,4 +33,4 @@ The VKExamples.sln solution within the vk_raytrace folder contains the VKExample
 
 Assuming the above requirements are satisfied, the solution should build and launch the vulkan window successfully, showing a plane with several reflective spheres. A debug panel allows for control of some of the scene properties, and on-the-fly toggling between using raytracing and the original object-order renderer that the example project contained.
 
-![The Vulkan raytracer with pathtracing enabled](results/yay_path_tracing.png)
+![The Vulkan raytracer with pathtracing enabled](results/real_path_tracing.png)
