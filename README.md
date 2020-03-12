@@ -1,8 +1,6 @@
 # Simple Hardware Ray Tracing - Jagi Natarajan | Eric Slyman
 
-## Summary
-
-We have implemented ray tracing in both C++ with Vulkan backend and Javascript with WebGL backend with several additional extensions.
+Implementation of ray tracing in both C++ with Vulkan backend and Javascript with WebGL backend with several additional extensions.
 
 ### C++/Vulkan Features
 
@@ -28,7 +26,7 @@ We have implemented ray tracing in both C++ with Vulkan backend and Javascript w
 - Time based parameterization of colors
 - Mouse based parameterization of light source position
 
-## Instructions
+## Setup
 
 ### C++/Vulkan
 
@@ -52,7 +50,7 @@ It is necessary to run a simple web server to get this project working due to lo
 
 The skeleton for this code is a modified version of A3 with all logic pulled out to centralized sources. index.html can display a canvas for each task where the function `setupTask("ray-1", Ray1, true)` connects the canvas with id *ray-1* to the javascript function *Ray1* in the file *ray1.js*. The task file *Ray1.js* handles the setup prior to glsl. Mostly, this is loading the necessary parameters into buffers for the glsl. The glsl code has been pulled into shader files under `webgl_raytrace/shaders/`. Note that the vertex shader has very little code in it, as we want to run our program for each pixel when ray tracing. The main ray tracing code can all be found in `webgl_raytrace/shaders/fragment.glsl`.
 
-## Results
+## Samples
 
 ### C++/Vulkan
 
