@@ -2,7 +2,9 @@
 
 Implementation of ray tracing in both C++ with Vulkan backend and Javascript with WebGL backend with several additional extensions.
 
-### C++/Vulkan Features
+## Summary of Features
+
+### C++/Vulkan
 
 - Perspective camera
 - Simple shadows
@@ -18,7 +20,7 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 - Rendering control via debug panel
 - Janky wasd movement
 
-### JS/WebGL Features
+### JS/WebGL
 
 - Perspective camera
 - Lambertian shading
@@ -26,6 +28,19 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 - Time based parameterization of colors
 - Mouse based parameterization of light source position
 
+## Results
+
+### C++/Vulkan
+
+![path tracing enabled](results/real_path_tracing.png)
+![75000-frame accumulation path trace](results/path_tracing_75k.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+![Path tracing with textures](results/path_tracing_textures.png)
+![Many cubes](https://gfycat.com/obviousimperturbablefluke.git)
+
+### JS/WebGL
+
+![The WebGL raytracer](results/webgl_lambertian.png)
 ## Setup
 
 ### C++/Vulkan
@@ -52,10 +67,3 @@ The skeleton for this code is a modified version of A3 with all logic pulled out
 
 ## Samples
 
-### C++/Vulkan
-
-![The Vulkan raytracer with pathtracing enabled](results/real_path_tracing.png)
-
-### JS/WebGL
-
-![The WebGL raytracer](results/webgl_lambertian.png)
