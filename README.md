@@ -32,7 +32,7 @@ Implementation of ray tracing in both C++ with Vulkan backend and Javascript wit
 
 ### C++/Vulkan
 
-####Requirements
+Requirements
 
 - An NVIDIA GPU with support for the `VK_NV_ray_trace` extension (>= GTX 1060)
 - [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Install the Desktop Development With C++ package)
@@ -50,7 +50,7 @@ It is necessary to run a simple web server to get this project working due to lo
 
 We started with `VKExample1` project, which implements the Vulkan rasterization pipeline. We added boilerplate code to `hello_vulkan.cpp`, to support configuring and using the raytracing pipeline instead. The `main.cpp` file calls into `hello_vulkan.cpp` to set up the pipeline, then sets up the scene by loading models and instances, and then runs a render loop, sampling user input, updating uniforms and instances, and calling either the rasterize() or raytrace() function. The raytracing pipeline consists of several GLSL shaders that correspond to specific pipeline stages, located in the `shaders` subfolder.
 
-The `raytrace.rgen` ray generation shader runs on every fragment, akin to a fragment shader, and generates rays emanating from the viewport. The shader then calls the `traceNV()` raytrace function, and stores the resulting color into the image buffer. This shader also implements a jittering feature - if the scene experiences no changes, the emanating rays are jittered by a random amount, and the resulting color value is averaged into the existing image. This feature is what allows for path tracing that progressively gets better over time, as more random rays are sampled leading to a more accurate monte-carlo approximation. Our debug GUI shows the number of frames that have been accumulated into the image on the screen.
+The `raytrace.rgen` ray generation shader runs on every fragment, akin to a fragment shader, and generates a ray for each fragment from the camera matrices. The shader then calls the `traceNV()` raytrace function, and stores the resulting color into the image buffer. This shader also implements a jittering feature - if the scene experiences no changes, the emanating rays are jittered by a random amount, and the resulting color value is averaged into the existing image. This feature is what allows for path tracing that progressively gets better over time, as more random rays are sampled leading to a more accurate monte-carlo approximation. Our debug GUI shows the number of frames that have been accumulated into the image on the screen.
 
 The `raytrace.rchit` is the closest-hit shader that implements blinn-phong lighting, reflections, and transparency, in a similar manner to Assignment 2. The `wavefront.glsl` shader, which contains structures for data from OBJ file materials, helpfully performs a lot of the lighting work for us. The closest-hit shader also casts out shadow rays, which use a minimal boolean ray payload with a custom miss shader, `raytraceShadow.rmiss`, used to figure out if a point or directional light is occluded. If the closest-hit shader can't be invoked because a ray hit no geometry, the `raytrace.rmiss` shader is invoked, which simply returns the attenuated clear color.
 
@@ -64,9 +64,11 @@ The skeleton for this code is a modified version of A3 with all logic pulled out
 
 ### C++/Vulkan
 
+![many cubes](docs/content//many_objects.png)
+![reflection](docs/content//texture_reflection.png)
 ![path tracing enabled](docs/content//real_path_tracing.png)
 ![75000-frame accumulation path trace](docs/content//path_tracing_75k.png)
-![Path tracing with textures](docs/content//path_tracing_textures.png)
+![Path traced cubes](docs/content//path_tracing_cubes.png)
 ![Path tracing with textures](docs/content//path_tracing_textures.png)
 [Many Cubes](https://gfycat.com/obviousimperturbablefluke.gif)
 
