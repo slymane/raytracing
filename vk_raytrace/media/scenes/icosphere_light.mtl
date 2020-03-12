@@ -1,0 +1,9 @@
+newmtl light
+illum 2
+d 1.0
+Ns 32
+Ni 1
+Ka 0.78 0.78 0.78 # White
+Kd 0.78 0.78 0.78
+Ks 0 0 0
+Ke 17 12 4

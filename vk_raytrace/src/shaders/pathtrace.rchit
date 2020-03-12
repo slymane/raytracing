@@ -120,6 +120,14 @@ void main()
         );
         prd.recursionDepth++;
 
+        if (mat.textureId >= 0)
+        {
+            uint txtId = mat.textureId + scnDesc.i[gl_InstanceID].txtOffset;
+            vec2 texCoord =
+                v0.texCoord * barycentrics.x + v1.texCoord * barycentrics.y + v2.texCoord * barycentrics.z;
+            mat.diffuse *= texture(textureSamplers[txtId], texCoord).xyz;
+        }
+
         // Compute the color at this intersection
         prd.hitValue = mat.emission + (2 * mat.diffuse * prd.hitValue * cos_theta);
     }
