@@ -17,8 +17,11 @@ layout(binding = 0, set = 1) uniform CameraProperties
 }
 cam;
 
+// The payload which is shared between recursive invocations of traceNV
+// Used to pass back any results from a specific trace, usually just the hitValue
 layout(location = 0) rayPayloadNV hitPayload prd;
 
+// Uniform constants passed from the application, specifying ray tracing parameters
 layout(push_constant) uniform Constants
 {
   vec4  clearColor;
@@ -60,7 +63,7 @@ void main()
         prd.hitValue = vec3(0);
         prd.attenuation = vec3(1.f);
 
-        // Closest hit shader selection
+        // Closest hit shader selection - 0 = raytrace.rchit, 1 = pathtrace.rchit
         int hitOffset = pushC.pathTrace ? 1 : 0;
 
         traceNV(topLevelAS, // acceleration structure

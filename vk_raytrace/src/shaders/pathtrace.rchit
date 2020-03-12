@@ -7,6 +7,12 @@
 #include "wavefront.glsl"
 #include "random.glsl"
 
+// This shader performs recursive path tracing using monte-carlo sampling
+// Upon a ray intersection, pick a random direction in the hemisphere centered
+// around the hit normal, and trace a new ray recursively, passing back the color.
+// The monte carlo integration is handled in the ray generation shader, where
+// the current frame is averaged with all previously identical frames using the frameCounter.
+
 layout(location = 0) rayPayloadInNV hitPayload prd;
 
 layout(binding = 0, set = 0) uniform accelerationStructureNV topLevelAS;
@@ -38,9 +44,12 @@ vec3 generate_hemisphere_vector(float r1, float r2)
 {
     float phi = r1 * 2.0 * M_PI;
     float theta = acos(1.0 - r2);
+    // Similar to our A1 sphere calculation, except theta=0 is the top of the hemisphere
     return vec3(sin(theta) * cos(phi), cos(theta), sin(theta)*sin(phi));
 }
 
+// Returns a matrix that will transform a (0,1,0)-relative hemisphere vector
+// to be relative to a specified normal vector instead
 mat3 normal_y_basis(vec3 N)
 {
     vec3 u;
@@ -81,16 +90,20 @@ void main()
     // Transforming the position to world space
     worldPos = vec3(scnDesc.i[gl_InstanceID].transfo * vec4(worldPos, 1.0));
 
+    // Generate two random values - the seed is passed as a reference, so it changes after each call to rnd()
     float r1 = rnd(prd.seed);
     float r2 = rnd(prd.seed);
 
+    // Compute the new ray reflected direction
     vec3 monteCarloDir = normal_y_basis(normal) * generate_hemisphere_vector(r1, r2);
+    // Lambert's cosine law - this is equivalent to the dot(L, N) calculation in direct illumination models
     float cos_theta = max(dot(monteCarloDir, normal), 0);
 
     WaveFrontMaterial mat = materials[objId].m[v0.matIndex];
 
     if (prd.recursionDepth > 0)
     {
+        // Send out the monte-carlo ray
         prd.recursionDepth--;
         traceNV(
             topLevelAS,           // acceleration structure
@@ -107,10 +120,12 @@ void main()
         );
         prd.recursionDepth++;
 
+        // Compute the color at this intersection
         prd.hitValue = mat.emission + (2 * mat.diffuse * prd.hitValue * cos_theta);
     }
     else
     {
+        // If we are at maximum depth, we can't calculate any diffuse
         prd.hitValue = mat.emission;
     }
 }
