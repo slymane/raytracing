@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>
+<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Hardware Ray Tracing - Jagi Natarajan | Eric Slyman</title>
@@ -14,11 +15,25 @@
     ul.task-list{list-style: none;}
   </style>
   <link rel="stylesheet" href="md.css" />
+
+  <!-- Utility -->
+  <script src="js/glUtil.js"></script>
+  <script src="js/uiUtil.js"></script>
+  <script src="js/shUtil.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- Linear Algebra -->
+  <script src="js/matrix.js"></script>
+  <script src="js/vector.js"></script>
+
+  <!-- Demos -->
+  <script src="js/ray1.js"></script>
+
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
 </head>
-<body>
+<body onload="setupWebGL();">
 <header id="title-block-header">
 <h1 class="title">Hardware Ray Tracing - Jagi Natarajan | Eric Slyman</h1>
 </header>
@@ -76,8 +91,8 @@
 <div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/SnoopyFilthyAfricanaugurbuzzard' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
 <div style='position:relative; padding-bottom:calc(52.92% + 44px)'><iframe src='https://gfycat.com/ifr/CapitalSparseArchaeopteryx' frameborder='0' scrolling='no' width='100%' height='100%' style='position:absolute;top:0;left:0;' allowfullscreen></iframe></div>
 <h3 id="jswebgl-3">JS/WebGL</h3>
-<figure>
-<img src="content/webgl_lambertian.png" alt="" /><figcaption>The WebGL raytracer</figcaption>
-</figure>
+<h2>Interactive Sample</h2>
+<canvas id="ray-1" width="820" height="461"></canvas>
+<script>function setupWebGL() {setupTask("ray-1", Ray1, true);}</script>
 </body>
 </html>
